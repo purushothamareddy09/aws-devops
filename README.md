@@ -97,14 +97,3 @@ aws-devops/
 
 ---
 
-## Credits
-
-- [Strimzi Kafka Operator](https://strimzi.io/)
-- [Terraform AWS Modules](https://github.com/terraform-aws-modules)
-- [Kubernetes](https://kubernetes.io/)
-
----
-
-## License
-
-This project is licensed under the MIT License.
