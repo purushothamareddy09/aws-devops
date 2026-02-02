@@ -52,6 +52,10 @@ jobs:
         if: ${{ github.event.inputs.action == 'plan' }}
         run: terraform plan -out=tfplan
 
+      - name: Terraform Plan (for Apply)
+        if: ${{ github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=tfplan
+
       - name: Terraform Apply
         if: ${{ github.event.inputs.action == 'apply' }}
         run: terraform apply -auto-approve tfplan
