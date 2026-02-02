@@ -16,7 +16,7 @@ jobs:
       - name: Create ECR repositories (backend & frontend)
         run: |
           pip install boto3
-          python IAC/EKS/scripts/create_ecr_repos.py
+          python platform/scripts/create_ecr_repos.py
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Docker image (backend)
         run: |
-          cd IAC/EKS/apps/backend
+          cd platform/apps/backend
           docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG .
 
       - name: Push Docker image to ECR (backend)
@@ -48,7 +48,7 @@ jobs:
       - name: Update backend deployment image
         run: |
           kubectl set image deployment/kafka-backend kafka-backend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG -n default || \
-          kubectl apply -f IAC/EKS/apps/backend/k8s-deployment.yaml
+          kubectl apply -f platform/apps/backend/k8s-deployment.yaml
 
   build-and-deploy-frontend:
     runs-on: ubuntu-latest
@@ -62,7 +62,7 @@ jobs:
       - name: Create ECR repositories (backend & frontend)
         run: |
           pip install boto3
-          python IAC/EKS/scripts/create_ecr_repos.py
+          python platform/scripts/create_ecr_repos.py
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -80,7 +80,7 @@ jobs:
 
       - name: Build Docker image (frontend)
         run: |
-          cd IAC/EKS/apps/frontend
+          cd platform/apps/frontend
           docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG .
 
       - name: Push Docker image to ECR (frontend)
@@ -94,7 +94,7 @@ jobs:
       - name: Update frontend deployment image
         run: |
           kubectl set image deployment/kafka-frontend kafka-frontend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG -n default || \
-          kubectl apply -f IAC/EKS/apps/frontend/k8s-deployment.yaml
+          kubectl apply -f platform/apps/frontend/k8s-deployment.yaml
 
       - name: Get Frontend External IP
         run: |
