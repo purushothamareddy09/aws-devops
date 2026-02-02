@@ -53,7 +53,6 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       resolve_conflicts = "OVERWRITE"
-      # service_account_role_arn removed; set this directly if you create a role separately
     }
   }
 
