@@ -9,7 +9,13 @@ module "eks" {
   enable_irsa     = true
 
   # Control plane logging
-  cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  cluster_enabled_log_types = [
+    "api",
+    "audit",
+    "authenticator",
+    "controllerManager",
+    "scheduler"
+  ]
 
   # Node group configuration
   eks_managed_node_group_defaults = {
@@ -23,9 +29,9 @@ module "eks" {
 
   eks_managed_node_groups = {
     default = {
-      min_size     = 1
-      max_size     = 3
-      desired_size = 2
+      min_size      = 1
+      max_size      = 3
+      desired_size  = 2
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
       labels = {
