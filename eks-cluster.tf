@@ -53,7 +53,7 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       resolve_conflicts = "OVERWRITE"
-      service_account_role_arn = module.eks.eks_addon_iam_role_arn["aws-ebs-csi-driver"]
+      # service_account_role_arn removed; set this directly if you create a role separately
     }
   }
 
