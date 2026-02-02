@@ -57,16 +57,6 @@ module "eks" {
     }
   }
 
-  irsa_service_accounts = {
-    metrics_server = {
-      namespace            = "kube-system"
-      service_account_name = "metrics-server"
-      attach_policy_arns   = [
-        "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-      ]
-    }
-  }
-
   tags = {
     Environment = "production"
     Terraform   = "true"
