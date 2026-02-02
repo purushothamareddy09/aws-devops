@@ -1,18 +1,18 @@
 terraform {
   backend "s3" {
-    bucket         = var.tf_state_bucket
+    bucket         = "state"
     key            = "eks/terraform.tfstate"
-    region         = var.aws_region
+    region         = "ap-south-1"
     encrypt        = true
   }
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "ap-south-1"
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = var.tf_state_bucket
+  bucket = "state"
 
   lifecycle {
     prevent_destroy = true
