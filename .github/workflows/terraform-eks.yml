@@ -17,7 +17,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform EKS Actions
+    name: Terraform EKS Actions - ${{ github.event.inputs.action }}
     runs-on: ubuntu-latest
     defaults:
       run:
