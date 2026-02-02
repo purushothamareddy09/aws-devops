@@ -1,0 +1,4 @@
+# This file is optional. You can customize Strimzi operator settings here.
+# For most cases, the default values are sufficient.
+# Example: set watch namespaces, resources, etc.
+watchNamespaces: ["kafka"]

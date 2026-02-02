@@ -1,0 +1,101 @@
+name: Build and Deploy Frontend and Backend to ECR/EKS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-backend:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      ECR_REPO_NAME: kafka-backend
+      IMAGE_TAG: latest
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+    steps:
+      - name: Create ECR repositories (backend & frontend)
+        run: |
+          pip install boto3
+          python IAC/EKS/scripts/create_ecr_repos.py
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image (backend)
+        run: |
+          cd IAC/EKS/apps/backend
+          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG .
+
+      - name: Push Docker image to ECR (backend)
+        run: |
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name ${{ secrets.EKS_CLUSTER_NAME }} --kubeconfig $KUBECONFIG
+
+      - name: Update backend deployment image
+        run: |
+          kubectl set image deployment/kafka-backend kafka-backend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG -n default || \
+          kubectl apply -f IAC/EKS/apps/backend/k8s-deployment.yaml
+
+  build-and-deploy-frontend:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      ECR_REPO_NAME: kafka-frontend
+      IMAGE_TAG: latest
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+    steps:
+      - name: Create ECR repositories (backend & frontend)
+        run: |
+          pip install boto3
+          python IAC/EKS/scripts/create_ecr_repos.py
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image (frontend)
+        run: |
+          cd IAC/EKS/apps/frontend
+          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG .
+
+      - name: Push Docker image to ECR (frontend)
+        run: |
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name ${{ secrets.EKS_CLUSTER_NAME }} --kubeconfig $KUBECONFIG
+
+      - name: Update frontend deployment image
+        run: |
+          kubectl set image deployment/kafka-frontend kafka-frontend=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$IMAGE_TAG -n default || \
+          kubectl apply -f IAC/EKS/apps/frontend/k8s-deployment.yaml
+
+      - name: Get Frontend External IP
+        run: |
+          kubectl get svc kafka-frontend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'

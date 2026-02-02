@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time EKS Kafka Platform</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Roboto', Arial, sans-serif; background: #f8f9fa; color: #222; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #0001; padding: 40px; }
+    h1, h2, h3 { color: #2a4365; }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5em; }
+    h2 { margin-top: 2em; }
+    pre, code { background: #f4f4f4; border-radius: 4px; padding: 2px 6px; font-size: 1em; }
+    pre { padding: 12px; overflow-x: auto; }
+    ul, ol { margin-left: 1.5em; }
+    .arch-diagram { background: #f4f4f4; border-radius: 6px; padding: 16px; font-family: 'Fira Mono', monospace; font-size: 1em; margin: 1em 0; }
+    .section { margin-bottom: 2em; }
+    .credits, .license { font-size: 0.95em; color: #555; }
+    .dir-structure { background: #f4f4f4; border-radius: 6px; padding: 16px; font-family: 'Fira Mono', monospace; font-size: 1em; margin: 1em 0; }
+    a { color: #3182ce; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .badge { display: inline-block; background: #3182ce; color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 0.9em; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Real-Time EKS Kafka Platform<br><span class="badge">Terraform</span> <span class="badge">EKS</span> <span class="badge">Kafka</span> <span class="badge">CI/CD</span></h1>
+    <div class="section">
+      <h2>Overview</h2>
+      <p>This project demonstrates a production-grade, real-time data platform on AWS using:</p>
+      <ul>
+        <li><b>AWS EKS</b> (Elastic Kubernetes Service): Managed Kubernetes cluster</li>
+        <li><b>Terraform</b>: Infrastructure as Code for AWS networking, EKS, IAM, and remote state</li>
+        <li><b>Strimzi Kafka Operator</b>: Kubernetes-native management of Apache Kafka as a StatefulSet</li>
+        <li><b>Kafka UI (Explorer)</b>: Web UI for monitoring Kafka topics and messages</li>
+        <li><b>GitHub Actions</b>: CI/CD pipelines for infrastructure and application deployment</li>
+        <li><b>ECR</b> (Elastic Container Registry): Container image storage for backend and frontend</li>
+        <li><b>Node.js Backend</b>: REST API to produce messages to Kafka</li>
+        <li><b>React Frontend</b>: UI to send messages and visualize real-time flow</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>Architecture Diagram</h2>
+      <div class="arch-diagram">
+<pre>+-------------------+         +-------------------+         +-------------------+
+|   React Frontend  | <-----> |   Node.js Backend | <-----> |      Kafka        |
+| (LoadBalancer SVC)|         | (ClusterIP SVC)   |         | (Strimzi Operator)|
++-------------------+         +-------------------+         +-------------------+
+        |                          |                                 |
+        |                          |                                 |
+        |                +-------------------+                      |
+        +--------------> |   Kafka UI (LB)   | <--------------------+
+                         +-------------------+</pre>
+      </div>
+      <ul>
+        <li><b>User</b> interacts with the React frontend (exposed via AWS LoadBalancer Service)</li>
+        <li><b>Frontend</b> sends messages to the backend API (internal ClusterIP Service)</li>
+        <li><b>Backend</b> produces messages to Kafka (via Strimzi-managed brokers)</li>
+        <li><b>Kafka UI</b> (Kafka Explorer) is exposed via LoadBalancer for real-time topic/message inspection</li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>Technologies & Components</h2>
+      <ul>
+        <li><b>AWS VPC, Subnets, NAT, IGW:</b> Secure, multi-AZ networking for EKS</li>
+        <li><b>EKS Cluster:</b> Managed Kubernetes with private subnets, node groups, and IRSA</li>
+        <li><b>Terraform S3 Backend:</b> Remote state management</li>
+        <li><b>Strimzi Kafka Operator:</b> Helm-deployed, manages Kafka/Zookeeper as StatefulSets</li>
+        <li><b>Kafka UI:</b> Helm-deployed, public access via LoadBalancer</li>
+        <li><b>Node.js Backend:</b> Express API, KafkaJS for producing messages</li>
+        <li><b>React Frontend:</b> User input form, sends data to backend</li>
+        <li><b>ECR:</b> Stores Docker images for backend and frontend</li>
+        <li><b>GitHub Actions:</b>
+          <ul>
+            <li>Infrastructure pipeline (init, plan, apply, destroy)</li>
+            <li>Application pipeline (build, push, deploy backend/frontend)</li>
+            <li>Kafka pipeline (deploy Strimzi, Kafka cluster, Kafka UI)</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>Flow</h2>
+      <ol>
+        <li><b>Infrastructure Provisioning:</b> Run Terraform pipeline to create VPC, EKS, IAM, S3 backend, etc.</li>
+        <li><b>Kafka Platform Setup:</b> Deploy Strimzi Operator and Kafka cluster via Helm. Deploy Kafka UI for topic/message inspection.</li>
+        <li><b>Application Deployment:</b> Build and push backend/frontend Docker images to ECR. Deploy backend and frontend to EKS via manifests.</li>
+        <li><b>Real-Time Demo:</b> User submits a message in the frontend. Frontend calls backend API, which produces the message to Kafka. Message appears in Kafka UI in real time.</li>
+      </ol>
+    </div>
+    <div class="section">
+      <h2>How to Use</h2>
+      <ol>
+        <li>Clone the repo and configure AWS credentials</li>
+        <li>Provision infrastructure: Run the Terraform GitHub Actions workflow (manual trigger)</li>
+        <li>Deploy Kafka platform: Run the Kafka deployment workflow (manual trigger)</li>
+        <li>Build and deploy applications: Run the build-and-deploy-apps workflow (manual trigger)</li>
+        <li>Access the frontend and Kafka UI: Use the LoadBalancer DNS for the frontend and Kafka UI (output in workflow logs)</li>
+        <li>Send messages and observe real-time flow in Kafka UI</li>
+      </ol>
+    </div>
+    <div class="section">
+      <h2>Directory Structure</h2>
+      <div class="dir-structure">
+<pre>IAC/EKS/
+  ├── vpc.tf, main.tf, variables.tf, eks-cluster.tf
+  ├── helm/
+  │    └── kafka/ (Strimzi chart, values, Kafka cluster manifest)
+  ├── apps/
+  │    ├── backend/ (Node.js app, Dockerfile, k8s manifest)
+  │    └── frontend/ (React app, Dockerfile, k8s manifest)
+  ├── scripts/
+  │    └── create_ecr_repos.py
+  └── .github/workflows/ (CI/CD pipelines)
+</pre>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Security & Best Practices</h2>
+      <ul>
+        <li>EKS nodes in private subnets</li>
+        <li>IRSA for service accounts (metrics-server, EBS CSI)</li>
+        <li>S3 remote state for Terraform</li>
+        <li>Separate ECR repos for backend and frontend</li>
+        <li>All deployments and services are managed via manifests and pipelines</li>
+      </ul>
+    </div>
+    <div class="section credits">
+      <h2>Credits</h2>
+      <ul>
+        <li><a href="https://strimzi.io/" target="_blank">Strimzi Kafka Operator</a></li>
+        <li><a href="https://github.com/provectus/kafka-ui" target="_blank">Kafka UI</a></li>
+        <li><a href="https://github.com/terraform-aws-modules" target="_blank">Terraform AWS Modules</a></li>
+      </ul>
+    </div>
+    <div class="section license">
+      <h2>License</h2>
+      <p>MIT</p>
+    </div>
+  </div>
+</body>
+</html>

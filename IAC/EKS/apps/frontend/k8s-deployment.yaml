@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-frontend
+  labels:
+    app: kafka-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-frontend
+  template:
+    metadata:
+      labels:
+        app: kafka-frontend
+    spec:
+      containers:
+        - name: kafka-frontend
+          image: <your-frontend-image>
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REACT_APP_API_URL
+              value: "http://kafka-backend:3001"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-frontend
+spec:
+  type: LoadBalancer
+  selector:
+    app: kafka-frontend
+  ports:
+    - port: 80
+      targetPort: 3000

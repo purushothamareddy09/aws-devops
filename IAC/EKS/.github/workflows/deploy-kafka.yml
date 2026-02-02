@@ -1,0 +1,61 @@
+name: Deploy Kafka on EKS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-kafka:
+    name: Deploy Kafka to EKS
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name ${{ secrets.EKS_CLUSTER_NAME }} --kubeconfig $KUBECONFIG
+
+      - name: Create kafka namespace
+        run: kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy Strimzi Kafka Operator
+        run: helm upgrade --install strimzi-kafka-operator ./helm/kafka/strimzi-kafka-operator -n kafka -f ./helm/kafka/strimzi-values.yaml
+
+      - name: Deploy Kafka Cluster
+        run: kubectl apply -f ./helm/kafka/kafka-cluster.yaml -n kafka
+
+      - name: Deploy Kafka UI (Kafka Explorer)
+        run: |
+          helm repo add kafka-ui https://provectus.github.io/kafka-ui-charts
+          helm repo update
+          helm upgrade --install kafka-ui kafka-ui/kafka-ui -n kafka --set yamlApplicationConfig="kafka:\n  clusters:\n    - name: my-kafka-cluster\n      bootstrapServers: my-kafka-cluster-kafka-bootstrap.kafka:9092"
+
+      - name: Expose Kafka UI with LoadBalancer
+        run: |
+          kubectl patch svc kafka-ui -n kafka -p '{"spec": {"type": "LoadBalancer"}}'
+
+      - name: Get Kafka UI External IP
+        run: |
+          kubectl get svc kafka-ui -n kafka -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
