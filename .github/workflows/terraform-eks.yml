@@ -56,6 +56,14 @@ jobs:
         if: ${{ github.event.inputs.action == 'apply' }}
         run: terraform plan -out=tfplan
 
+      - name: Check tfplan file exists
+        if: ${{ github.event.inputs.action == 'apply' }}
+        run: |
+          if [ ! -f tfplan ]; then
+            echo "tfplan file not found! Terraform plan step may have failed."
+            exit 1
+          fi
+
       - name: Terraform Apply
         if: ${{ github.event.inputs.action == 'apply' }}
         run: terraform apply -auto-approve tfplan
