@@ -7,7 +7,7 @@ variable "vpc_cidr" {
 variable "azs" {
   description = "List of availability zones to use"
   type        = list(string)
-  default     = ["us-east-1a", "us-east-1b"]
+  default     = ["ap-south-1a", "ap-south-1b"]
 }
 
 variable "eks_cluster_name" {
@@ -25,7 +25,7 @@ variable "eks_version" {
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "tf_state_bucket" {
