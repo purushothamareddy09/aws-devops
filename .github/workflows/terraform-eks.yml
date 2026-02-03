@@ -6,7 +6,7 @@ on:
       action:
         description: 'Terraform Action'
         required: true
-        default: 'plan'
+        default: 'init'
         type: choice
         options:
           - init
