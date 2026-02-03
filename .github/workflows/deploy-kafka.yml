@@ -38,7 +38,7 @@ jobs:
           aws eks update-kubeconfig --region $AWS_REGION --name ${{ secrets.EKS_CLUSTER_NAME }} --kubeconfig $KUBECONFIG
 
       - name: Create kafka namespace
-        run: kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
+        run: kubectl create namespace kafka
 
       - name: Deploy Strimzi Kafka Operator
         run: helm upgrade --install strimzi-kafka-operator ./helm/kafka/strimzi-kafka-operator -n kafka -f ./helm/kafka/strimzi-values.yaml
